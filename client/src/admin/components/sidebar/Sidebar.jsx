@@ -1,18 +1,33 @@
-import React, { useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { Link, useLocation } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { setSidebarToggle } from '../../../redux/sidebarToggle';
-import { Add, AdminPanelSettings, Book, Report, Settings, ViewAgenda } from '@mui/icons-material';
+import { 
+    Add, AdminPanelSettings, Book, Report, Settings, ViewAgenda,
+    Dashboard as DashboardIcon, Home, School, TrendingUp, People,
+    ExpandMore, ExpandLess
+} from '@mui/icons-material';
 import './sidebar.scss'
 
 const Sidebar = () => {
     const { sidebarToggle } = useSelector(state => state.sidebarToggle);
     const dispatch = useDispatch();
+    const location = useLocation();
+    const [expandedMenus, setExpandedMenus] = useState({});
 
     const handleToggle = () => {
         dispatch(setSidebarToggle(!sidebarToggle));
         document.body.classList.toggle('sidebar-toggled');
     };
+
+    const toggleMenu = (menuName) => {
+        setExpandedMenus(prev => ({
+            ...prev,
+            [menuName]: !prev[menuName]
+        }));
+    };
+
+    const isActive = (path) => location.pathname === path;
 
     useEffect(() => {
         if (window.innerWidth > 540) {
@@ -21,117 +36,138 @@ const Sidebar = () => {
     }, [dispatch]);
 
     return (
-        <div className={` d-flex flex-column flex-shrink-0 ${sidebarToggle ? '' : 'sidebar-close'}`} id="sidebar">
-            <ul className="w-100 nav flex-column bg-gradient-primary sidebar sidebar-dark accordion">
-                {/* Sidebar - Brand */}
-                <li className="nav-item">
-                    <a className="nav-link d-flex align-items-center justify-content-center" href="#">
-                        <div className="sidebar-brand-icon rotate-n-15">
-                            <i className="fas fs-1 text-white  fa-laugh-wink"></i>
-                        </div>
-                        <div className="sidebar-brand-text mx-3">Admin</div>
-                    </a>
-                </li>
-                <hr className="my-0" />
-                {/* Dashboard */}
-                <li className="nav-item">
-                    <Link to="/" className="nav-link">
-                        <i className="fas fa-fw fa-tachometer-alt"></i>
-                        <span>Dashboard</span>
-                    </Link>
-                </li>
-                <hr />
-                {/* Pages */}
-                <li className="nav-item">
-                    <a className="nav-link collapsed" data-bs-toggle="collapse" href="#collapseTwo" aria-expanded="false">
-                        <i className="fas fa-fw fa-cog"></i>
-                        <span>Home Page</span>
-                    </a>
-                    <div id="collapseTwo" className="collapse" data-bs-parent="#sidebar">
-                        <div className="bg-white py-2 collapse-inner rounded">
-                            <h6 className="collapse-header">Make Changes:</h6>
-                            <Link to="/topbar" className="collapse-item">Topbar</Link>
-                            <Link to="/review" className="collapse-item">Student Reviews</Link>
-                        </div>
+        <div className={`minimal-sidebar ${sidebarToggle ? '' : 'sidebar-close'}`} id="sidebar">
+            <div className="sidebar-content">
+                {/* Brand */}
+                <div className="sidebar-brand">
+                    <div className="brand-icon">
+                        <School style={{ fontSize: '28px' }} />
                     </div>
-                </li>
-                {/* Courses */}
-                <li className="nav-item">
-                    <a className="nav-link collapsed" data-bs-toggle="collapse" href="#collapseThree" aria-expanded="false">
-                        <i className="fas fa-fw fa-cog"></i>
-                        <span>Courses info</span>
-                    </a>
-                    <div id="collapseThree" className="collapse" data-bs-parent="#sidebar">
-                        <div className="bg-white py-2 collapse-inner rounded">
-                            <h6 className="collapse-header">Make Changes:</h6>
-                            <Link to="/courses" className="collapse-item">Update courses</Link>
-                            <Link to="/referral" className="collapse-item">Referrals</Link>
-                        </div>
-                    </div>
-                </li>
-                {/* Series Management */}
-                <li className="nav-item">
-                    <a className="nav-link collapsed" data-bs-toggle="collapse" href="#collapseSeries" aria-expanded="false">
-                        <i className="fas fa-fw fa-book"></i>
-                        <span>Series Management</span>
-                    </a>
-                    <div id="collapseSeries" className="collapse" data-bs-parent="#sidebar">
-                        <div className="bg-white py-2 collapse-inner rounded">
-                            <h6 className="collapse-header">Series Operations:</h6>
-                            <Link to="/series" className="collapse-item">Manage Series</Link>
-                            <Link to="/tests" className="collapse-item">Manage Tests</Link>
-                            <Link to="/series-mcqs" className="collapse-item">Manage Series MCQs</Link>
-                            <Link to="/enrollments" className="collapse-item">Manage Enrollments</Link>
-                            <Link to="/payments" className="collapse-item">Manage Payments</Link>
-                        </div>
-                    </div>
-                </li>
-                <hr />
-                {/* Addons */}
-                <li className="nav-item">
-                    <Link to="/users" className="nav-link">
-                        <AdminPanelSettings />
-                        <span>Manage Users</span>
+                    <div className="brand-text">Admin Panel</div>
+                </div>
+
+                {/* Navigation */}
+                <nav className="sidebar-nav">
+                    {/* Dashboard */}
+                    <Link to="/" className={`nav-item ${isActive('/') ? 'active' : ''}`}>
+                        <DashboardIcon className="nav-icon" />
+                        <span className="nav-text">Dashboard</span>
                     </Link>
-                </li>
-                <li className="nav-item">
-                    <Link to="/course-request" className="nav-link">
-                        <Book />
-                        <span>Course Requests</span>
-                    </Link>
-                </li>
-                <li className="nav-item">
-                    <a className="nav-link collapsed" data-bs-toggle="collapse" href="#collapsePages" aria-expanded="false">
-                        <i className="fas fa-fw fa-folder"></i>
-                        <span>Manage MCQ's</span>
-                    </a>
-                    <div id="collapsePages" className="collapse" data-bs-parent="#sidebar">
-                        <div className="bg-white py-1 collapse-inner rounded">
-                            <h6 className="collapse-header">MCQS:</h6>
-                            <Link to="/add-mcq" className="collapse-item">
-                                <Add /> Add New MCQ
-                            </Link>
-                            <Link to="/view-mcq" className="collapse-item">
-                                <ViewAgenda /> View MCQ's
-                            </Link>
-                            <Link to="/report-mcq" className="collapse-item">
-                                <Report /> Reported MCQ's
-                            </Link>
+
+                    {/* Home Page */}
+                    <div className="nav-group">
+                        <div className="nav-item" onClick={() => toggleMenu('homepage')}>
+                            <Home className="nav-icon" />
+                            <span className="nav-text">Home Page</span>
+                            {expandedMenus.homepage ? <ExpandLess className="expand-icon" /> : <ExpandMore className="expand-icon" />}
                         </div>
+                        {expandedMenus.homepage && (
+                            <div className="sub-menu">
+                                <Link to="/topbar" className={`sub-item ${isActive('/topbar') ? 'active' : ''}`}>
+                                    <span>Topbar</span>
+                                </Link>
+                                <Link to="/review" className={`sub-item ${isActive('/review') ? 'active' : ''}`}>
+                                    <span>Student Reviews</span>
+                                </Link>
+                            </div>
+                        )}
                     </div>
-                </li>
-                <li className="nav-item">
-                    <Link to="/settings" className="nav-link">
-                        <Settings />
-                        <span>Admin Settings</span>
+
+                    {/* Courses Info */}
+                    <div className="nav-group">
+                        <div className="nav-item" onClick={() => toggleMenu('courses')}>
+                            <Book className="nav-icon" />
+                            <span className="nav-text">Courses Info</span>
+                            {expandedMenus.courses ? <ExpandLess className="expand-icon" /> : <ExpandMore className="expand-icon" />}
+                        </div>
+                        {expandedMenus.courses && (
+                            <div className="sub-menu">
+                                <Link to="/courses" className={`sub-item ${isActive('/courses') ? 'active' : ''}`}>
+                                    <span>Update Courses</span>
+                                </Link>
+                                <Link to="/referral" className={`sub-item ${isActive('/referral') ? 'active' : ''}`}>
+                                    <span>Referrals</span>
+                                </Link>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Series Management */}
+                    <div className="nav-group">
+                        <div className="nav-item" onClick={() => toggleMenu('series')}>
+                            <TrendingUp className="nav-icon" />
+                            <span className="nav-text">Series Management</span>
+                            {expandedMenus.series ? <ExpandLess className="expand-icon" /> : <ExpandMore className="expand-icon" />}
+                        </div>
+                        {expandedMenus.series && (
+                            <div className="sub-menu">
+                                <Link to="/series" className={`sub-item ${isActive('/series') ? 'active' : ''}`}>
+                                    <span>Manage Series</span>
+                                </Link>
+                                <Link to="/tests" className={`sub-item ${isActive('/tests') ? 'active' : ''}`}>
+                                    <span>Manage Tests</span>
+                                </Link>
+                                <Link to="/series-mcqs" className={`sub-item ${isActive('/series-mcqs') ? 'active' : ''}`}>
+                                    <span>Series MCQs</span>
+                                </Link>
+                                <Link to="/enrollments" className={`sub-item ${isActive('/enrollments') ? 'active' : ''}`}>
+                                    <span>Enrollments</span>
+                                </Link>
+                                <Link to="/payments" className={`sub-item ${isActive('/payments') ? 'active' : ''}`}>
+                                    <span>Payments</span>
+                                </Link>
+                            </div>
+                        )}
+                    </div>
+
+                    <div className="nav-divider"></div>
+
+                    {/* Manage Users */}
+                    <Link to="/users" className={`nav-item ${isActive('/users') ? 'active' : ''}`}>
+                        <People className="nav-icon" />
+                        <span className="nav-text">Manage Users</span>
                     </Link>
-                </li>
-                <hr className="d-none d-md-block" />
-                {/* Sidebar Toggler */}
-                {/* <div className="text-center d-none d-md-inline">
-                    <button onClick={handleToggle} className="btn btn-primary rounded-circle border-0" id="sidebarToggle"></button>
-                </div> */}
-            </ul>
+
+                    {/* Course Requests */}
+                    <Link to="/course-request" className={`nav-item ${isActive('/course-request') ? 'active' : ''}`}>
+                        <AdminPanelSettings className="nav-icon" />
+                        <span className="nav-text">Course Requests</span>
+                    </Link>
+
+                    {/* Manage MCQs */}
+                    <div className="nav-group">
+                        <div className="nav-item" onClick={() => toggleMenu('mcqs')}>
+                            <ViewAgenda className="nav-icon" />
+                            <span className="nav-text">Manage MCQs</span>
+                            {expandedMenus.mcqs ? <ExpandLess className="expand-icon" /> : <ExpandMore className="expand-icon" />}
+                        </div>
+                        {expandedMenus.mcqs && (
+                            <div className="sub-menu">
+                                <Link to="/add-mcq" className={`sub-item ${isActive('/add-mcq') ? 'active' : ''}`}>
+                                    <Add style={{ fontSize: '18px', marginRight: '8px' }} />
+                                    <span>Add New MCQ</span>
+                                </Link>
+                                <Link to="/view-mcq" className={`sub-item ${isActive('/view-mcq') ? 'active' : ''}`}>
+                                    <ViewAgenda style={{ fontSize: '18px', marginRight: '8px' }} />
+                                    <span>View MCQs</span>
+                                </Link>
+                                <Link to="/report-mcq" className={`sub-item ${isActive('/report-mcq') ? 'active' : ''}`}>
+                                    <Report style={{ fontSize: '18px', marginRight: '8px' }} />
+                                    <span>Reported MCQs</span>
+                                </Link>
+                            </div>
+                        )}
+                    </div>
+
+                    <div className="nav-divider"></div>
+
+                    {/* Settings */}
+                    <Link to="/settings" className={`nav-item ${isActive('/settings') ? 'active' : ''}`}>
+                        <Settings className="nav-icon" />
+                        <span className="nav-text">Admin Settings</span>
+                    </Link>
+                </nav>
+            </div>
         </div>
     );
 };
