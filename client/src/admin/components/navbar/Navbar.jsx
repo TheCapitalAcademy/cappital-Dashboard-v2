@@ -10,6 +10,15 @@ const Navbar = () => {
         document.getElementsByTagName('body')[0].classList.toggle('sidebar-toggled');
     }
 
+    // Check if super admin is logged in
+    const superAdminData = localStorage.getItem('superAdmin');
+    const superAdmin = superAdminData ? JSON.parse(superAdminData) : null;
+
+    const handleLogout = () => {
+        localStorage.removeItem('superAdmin');
+        window.location.href = '/super-admin';
+    };
+
     return (
         <>
             <nav className="navbar navbar-expand navbar-light bg-white topbar mb-4 static-top shadow">
@@ -19,6 +28,42 @@ const Navbar = () => {
                 </button>
                 {/* <!-- Topbar Navbar --> */}
                 <ul className="navbar-nav ml-auto">
+                    {/* Super Admin Badge */}
+                    {superAdmin && superAdmin.role === 'super-admin' && (
+                        <>
+                            <li className="nav-item" style={{ display: 'flex', alignItems: 'center', marginRight: '10px' }}>
+                                <span style={{ 
+                                    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                                    color: 'white',
+                                    padding: '6px 12px',
+                                    borderRadius: '20px',
+                                    fontSize: '12px',
+                                    fontWeight: 'bold'
+                                }}>
+                                    🔐 {superAdmin.username} (Super Admin)
+                                </span>
+                            </li>
+                            <li className="nav-item">
+                                <button 
+                                    onClick={handleLogout}
+                                    className="btn btn-sm"
+                                    style={{ 
+                                        background: '#dc3545',
+                                        color: 'white',
+                                        borderRadius: '20px',
+                                        padding: '6px 16px',
+                                        fontSize: '12px',
+                                        fontWeight: 'bold',
+                                        border: 'none',
+                                        cursor: 'pointer'
+                                    }}
+                                >
+                                    <i className="fas fa-sign-out-alt" style={{ marginRight: '5px' }}></i>
+                                    Logout
+                                </button>
+                            </li>
+                        </>
+                    )}
 
                     {/* <!-- Nav Item - Alerts --> */}
                     {/* <li className="nav-item dropdown no-arrow mx-1" style={{ background: "transparent" }}>

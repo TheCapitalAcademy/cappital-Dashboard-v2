@@ -14,6 +14,7 @@ import Forgot from './components/reset-password/Forgot.jsx';
 import SetPassword from './components/reset-password/SetPassword.jsx';
 import Calculator from './components/calculator/Calculator.jsx';
 const Mcq = lazy(() => import('./pages/mcq/Mcq.jsx'))
+const SuperAdminLogin = lazy(() => import('./pages/super-admin-login/SuperAdminLogin.jsx'))
 
 // admin pages
 const AdminHome = lazy(() => import('./admin/pages/home/AdminHome.jsx'));
@@ -153,6 +154,12 @@ const Routes = () => {
   };
 
   const AdminProtectedRoute = ({ children }) => {
+    // Check if super admin is logged in
+    const superAdmin = localStorage.getItem('superAdmin');
+    if (superAdmin) {
+      return children;
+    }
+    
     if (!isAdminAuthenticated) {
       return (
         <>
@@ -169,6 +176,11 @@ const Routes = () => {
                 Submit
               </Button>
             </form>
+            <div style={{ marginTop: '20px', textAlign: 'center' }}>
+              <a href="/super-admin" style={{ color: '#667eea', textDecoration: 'none' }}>
+                Super Admin? Login here
+              </a>
+            </div>
           </div>
         </>
       );
@@ -183,6 +195,12 @@ const Routes = () => {
 
   // Main routes object
   const router = createBrowserRouter([
+    // ---------------Super Admin Login----------------
+    {
+      path: "/super-admin",
+      element: <LazyLoader><SuperAdminLogin /></LazyLoader>,
+      errorElement: <CrashError/>,
+    },
   
     // ---------------Admin page routes----------------
     {

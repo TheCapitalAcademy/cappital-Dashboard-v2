@@ -28,6 +28,11 @@ export default function UserTableToolbar({
   const { enqueueSnackbar } = useSnackbar();
   const [days, setDays] = useState(null);  //state for days
 
+  // Check if super admin is logged in
+  const superAdminData = localStorage.getItem('superAdmin');
+  const superAdmin = superAdminData ? JSON.parse(superAdminData) : null;
+  const isSuperAdmin = superAdmin && superAdmin.role === 'super-admin';
+
   //snackbar
   const showCenteredSnackbar = (message, variant) => {
     enqueueSnackbar(message, {
@@ -102,7 +107,20 @@ export default function UserTableToolbar({
         </Select>
       </FormControl>
 
-      {numSelected > 0 && (
+      {/* SUPER ADMIN ONLY: Delete MCQ Feature */}
+      {numSelected > 0 && isSuperAdmin && (
+        <div className='mt-3 d-flex align-item-center gx-2'>
+
+          <Tooltip title="Delete All Selected (Super Admin Only)">
+            <IconButton onClick={handleDelete}>
+              <DeleteForever className='bg-danger p-1 text-white fs-3 rounded-4' />
+            </IconButton>
+          </Tooltip>
+        </div>
+      )}
+
+      {/* COMMENTED OUT: Regular admin delete feature */}
+      {/* {numSelected > 0 && (
         <div className='mt-3 d-flex align-item-center gx-2'>
 
           <Tooltip title="Delete All Selected ">
@@ -111,7 +129,7 @@ export default function UserTableToolbar({
             </IconButton>
           </Tooltip>
         </div>
-      )}
+      )} */}
     </Toolbar>
   );
 }
