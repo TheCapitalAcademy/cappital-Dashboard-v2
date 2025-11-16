@@ -256,24 +256,18 @@ export default function UserPage() {
           </Grid>
 
           <Grid item xs={12} sm={6} md={3}>
-            <FormControl fullWidth size="small" disabled={!selectedChapter || availableTopics.length === 0}>
-              <InputLabel>Topic</InputLabel>
-              <Select
-                value={selectedTopic}
-                label="Topic"
-                onChange={(e) => {
-                  setSelectedTopic(e.target.value);
-                  setFetchpage(1);
-                }}
-              >
-                <MenuItem value="">All Topics</MenuItem>
-                {availableTopics.filter(topic => topic).map((topic) => (
-                  <MenuItem key={topic} value={topic}>
-                    {topic}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
+            <TextField
+              fullWidth
+              size="small"
+              label="Topic"
+              placeholder="Enter topic name"
+              value={selectedTopic}
+              onChange={(e) => {
+                setSelectedTopic(e.target.value);
+                setFetchpage(1);
+              }}
+              disabled={!selectedChapter}
+            />
           </Grid>
         </Grid>
 

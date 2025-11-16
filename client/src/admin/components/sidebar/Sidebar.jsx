@@ -14,6 +14,18 @@ const Sidebar = () => {
     const dispatch = useDispatch();
     const location = useLocation();
     const [expandedMenus, setExpandedMenus] = useState({});
+    const [isMobile, setIsMobile] = useState(false);
+
+    useEffect(() => {
+        const checkMobile = () => {
+            setIsMobile(window.innerWidth <= 1024);
+        };
+        
+        checkMobile();
+        window.addEventListener('resize', checkMobile);
+        
+        return () => window.removeEventListener('resize', checkMobile);
+    }, []);
 
     const handleToggle = () => {
         dispatch(setSidebarToggle(!sidebarToggle));
@@ -30,21 +42,31 @@ const Sidebar = () => {
     const isActive = (path) => location.pathname === path;
 
     useEffect(() => {
-        if (window.innerWidth > 540) {
+        if (window.innerWidth > 1024) {
             dispatch(setSidebarToggle(true));
         }
     }, [dispatch]);
 
     return (
-        <div className={`minimal-sidebar ${sidebarToggle ? '' : 'sidebar-close'}`} id="sidebar">
-            <div className="sidebar-content">
-                {/* Brand */}
-                <div className="sidebar-brand">
-                    <div className="brand-icon">
-                        <School style={{ fontSize: '28px' }} />
+        <>
+            {/* Mobile backdrop */}
+            {sidebarToggle && isMobile && (
+                <div className="sidebar-backdrop" onClick={handleToggle}></div>
+            )}
+            
+            <div className={`minimal-sidebar ${sidebarToggle ? '' : 'sidebar-close'}`} id="sidebar">
+                <div className="sidebar-content">
+                    {/* Brand */}
+                    <div className="sidebar-brand">
+                        <div className="brand-icon">
+                            <School style={{ fontSize: '28px' }} />
+                        </div>
+                        <div className="brand-text">Admin Panel</div>
+                        {/* Mobile close button */}
+                        <button className="mobile-close-btn" onClick={handleToggle}>
+                            <ExpandLess style={{ fontSize: '24px', transform: 'rotate(-90deg)' }} />
+                        </button>
                     </div>
-                    <div className="brand-text">Admin Panel</div>
-                </div>
 
                 {/* Navigation */}
                 <nav className="sidebar-nav">
@@ -169,6 +191,7 @@ const Sidebar = () => {
                 </nav>
             </div>
         </div>
+        </>
     );
 };
 

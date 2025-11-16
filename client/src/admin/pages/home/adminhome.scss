@@ -2,28 +2,34 @@
     display: flex;
     min-height: 100vh;
     background: #f9fafb;
+    position: relative;
+    width: 100%;
 }
 
 .admin-main-content {
     flex: 1;
-    margin-left: 260px;
     display: flex;
     flex-direction: column;
     min-height: 100vh;
-    transition: margin-left 0.3s ease;
+    transition: all 0.3s ease;
+    margin-left: 0;
+    width: 100%;
+    max-width: 100%;
 }
 
 .admin-page-content {
     flex: 1;
     padding: 24px;
+    width: 100%;
     max-width: 100%;
     overflow-x: hidden;
+    box-sizing: border-box;
 }
 
 // Responsive
-@media (max-width: 768px) {
+@media (max-width: 1024px) {
     .admin-main-content {
-        margin-left: 0;
+        margin-left: 0 !important;
     }
     
     .admin-page-content {

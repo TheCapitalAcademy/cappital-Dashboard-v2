@@ -15,6 +15,18 @@
         transform: translateX(-100%);
     }
 
+    // Desktop: static positioning to push content
+    @media (min-width: 1025px) {
+        position: relative;
+        z-index: 1;
+    }
+    
+    // Mobile/Tablet: fixed positioning to overlay
+    @media (max-width: 1024px) {
+        position: fixed;
+        z-index: 1000;
+    }
+
     .sidebar-content {
         display: flex;
         flex-direction: column;
@@ -46,6 +58,7 @@
         align-items: center;
         gap: 12px;
         border-bottom: 1px solid #e5e7eb;
+        position: relative;
 
         .brand-icon {
             width: 40px;
@@ -63,6 +76,31 @@
             font-weight: 700;
             color: #111827;
             letter-spacing: -0.5px;
+            flex: 1;
+        }
+
+        .mobile-close-btn {
+            display: none;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+            background: #f3f4f6;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: #111827;
+            
+            &:hover {
+                background: #e5e7eb;
+                border-color: #667eea;
+                color: #667eea;
+            }
+
+            @media (max-width: 1024px) {
+                display: flex;
+            }
         }
     }
 
@@ -178,7 +216,7 @@
 }
 
 // Responsive
-@media (max-width: 768px) {
+@media (max-width: 1024px) {
     .minimal-sidebar {
         width: 280px;
         box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
@@ -186,6 +224,31 @@
         &:not(.sidebar-close) {
             transform: translateX(0);
         }
+    }
+}
+
+// Mobile backdrop
+.sidebar-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 999;
+    animation: fadeIn 0.3s ease;
+    
+    @media (min-width: 1025px) {
+        display: none;
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
     }
 }
 
