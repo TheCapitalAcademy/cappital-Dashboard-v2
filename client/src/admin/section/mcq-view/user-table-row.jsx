@@ -23,12 +23,14 @@ const style = {
   top: '50%',
   left: '50%',
   transform: 'translate(-50%, -50%)',
-  width: '90%',
+  width: { xs: '95%', sm: '90%', md: '85%', lg: '80%' },
+  maxWidth: '1200px',
   bgcolor: 'background.paper',
   border: '2px solid #000',
   boxShadow: 24,
-  maxHeight: '100vh', // Set maximum height for modal
-  overflowY: 'auto' // Enable vertical scrolling
+  maxHeight: { xs: '95vh', sm: '90vh' },
+  overflowY: 'auto',
+  borderRadius: '8px'
 };
 
 export default function UserTableRow({
@@ -432,9 +434,9 @@ export default function UserTableRow({
         aria-labelledby="modal-modal-title"
         aria-describedby="modal-modal-description"
       >
-        <Box sx={style} className='p-0 p-md-4'>
-          <Container fluid>
-            <h1 className="text-primary fw-bold py-2 px-4"> Edit MCQ Form</h1>
+        <Box sx={style} className='p-2 p-md-4'>
+          <Container fluid className='px-2 px-md-3'>
+            <h1 className="text-primary fw-bold py-2 px-0 px-md-2" style={{ fontSize: 'clamp(1.5rem, 4vw, 2rem)' }}> Edit MCQ Form</h1>
             <Form>
               <Form.Group controlId="question">
                 <Form.Label className="fw-bold">Question ({nextIndex + 1})</Form.Label>
@@ -596,10 +598,27 @@ export default function UserTableRow({
                   </div>
                 </div>
               </div>
-              <div className="row">
-                <Button className='col-md-5 fw-bold py-2 bg-warning text-light' type="submit" onClick={handleSubmit}>Update</Button>
-                <Button className='col-md-5 ms-auto py-2 fw-bold bg-primary text-light' type="button" onClick={handleNext}>Next</Button>
-
+              <div className="row g-2 mb-3">
+                <div className="col-12 col-md-6">
+                  <Button 
+                    className='w-100 fw-bold py-2 bg-warning text-light' 
+                    type="submit" 
+                    onClick={handleSubmit}
+                    sx={{ minHeight: '48px' }}
+                  >
+                    Update
+                  </Button>
+                </div>
+                <div className="col-12 col-md-6">
+                  <Button 
+                    className='w-100 fw-bold py-2 bg-primary text-light' 
+                    type="button" 
+                    onClick={handleNext}
+                    sx={{ minHeight: '48px' }}
+                  >
+                    Next
+                  </Button>
+                </div>
               </div>
             </Form>
           </Container>
