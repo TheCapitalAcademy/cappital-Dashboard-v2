@@ -30,7 +30,7 @@ export default function UserPage() {
   const [order, setOrder] = useState('asc');
   const [selected, setSelected] = useState([]);
   const [orderBy, setOrderBy] = useState('name');
-  const [rowsPerPage, setRowsPerPage] = useState(150);
+  const [rowsPerPage, setRowsPerPage] = useState(50); // Reduced default for faster loading
   const [mcqs, setMcqs] = useState([]);
   const [reload, setReload] = useState(false);
   const [filteredIds, setFilteredIds] = useState([]);

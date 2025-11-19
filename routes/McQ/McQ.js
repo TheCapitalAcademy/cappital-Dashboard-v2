@@ -164,12 +164,14 @@ router.get('/pages', wrapAsync(async (req, res) => {
         if (subject) filter.subject = subject;
         if (chapter) filter.chapter = { $regex: chapter, $options: 'i' }; // Case-insensitive partial match
         if (course) filter.course = course;
-        if (topic) filter.topic = topic;
+        if (topic) filter.topic = { $regex: topic, $options: 'i' }; // Case-insensitive partial match
 
         const mcqs = await MCQ.find(filter)
+            .select('-__v') // Exclude version field
             .sort({ subject: 1 })  // Static sort order: descending by createdAt
             .skip((page - 1) * limit)
-            .limit(limit);
+            .limit(limit)
+            .lean(); // Return plain JS objects instead of Mongoose documents for better performance
         const totalCount = await MCQ.countDocuments(filter);
         
         // Get unique subjects and chapters for filter dropdowns
@@ -226,7 +228,7 @@ router.get('/search', wrapAsync(async (req, res) => {
         if (subject) filter.subject = subject;
         if (chapter) filter.chapter = { $regex: chapter, $options: 'i' };
         if (course) filter.course = course;
-        if (topic) filter.topic = topic;
+        if (topic) filter.topic = { $regex: topic, $options: 'i' };
 
         console.log('Built filter:', JSON.stringify(filter, null, 2));
 
@@ -234,9 +236,11 @@ router.get('/search', wrapAsync(async (req, res) => {
         const limitNum = parseInt(limit);
         
         const mcqs = await MCQ.find(filter)
+            .select('-__v')
             .sort({ subject: 1 })
             .skip((pageNum - 1) * limitNum)
-            .limit(limitNum);
+            .limit(limitNum)
+            .lean();
             
         const totalCount = await MCQ.countDocuments(filter);
         
