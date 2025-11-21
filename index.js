@@ -125,7 +125,7 @@ app.get('/userinfo',checkTrialStatus, wrapAsync(async (req, res, next) => {
     } catch (error) {
         res.status(404).send('user expire');
     }
-}));
+})); 
 
 //route paths
 app.use('/upload', uploadImg);

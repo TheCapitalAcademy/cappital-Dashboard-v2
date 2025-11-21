@@ -12,6 +12,8 @@
     z-index: 1000;
 
     &.sidebar-close {
+        width: 0;
+        padding: 0;
         transform: translateX(-100%);
     }
 

@@ -26,6 +26,7 @@ export default function UserTableRow({
   expiryDate,
   status,
   paymentImg,
+  refCode,
   handleClick,
   index,
   userId,
@@ -155,7 +156,7 @@ export default function UserTableRow({
           />
         </TableCell>
 
-
+        <TableCell align="center">{refCode || 'N/A'}</TableCell>
 
         <TableCell align="right">
           <IconButton onClick={handleOpenMenu}>

@@ -76,7 +76,7 @@ router.get('/', wrapAsync(async (req, res, next) => {
     const documents = await Purchase.find({}).populate('user');
 
     const extractedData = documents.map(doc => {
-        const { _id, course, status, price, purchaseDate, paymentScreenshot, expiryDate } = doc;
+        const { _id, course, status, price, purchaseDate, paymentScreenshot, expiryDate, refCode } = doc;
         const user = doc.user || {}; // Handle cases where user object might be null or missing
         const username = user.username || null;
         const profileUrl = user.profileUrl || null;
@@ -90,7 +90,8 @@ router.get('/', wrapAsync(async (req, res, next) => {
             date: purchaseDate,
             status,
             paymentImg: paymentScreenshot,
-            expiryDate
+            expiryDate,
+            refCode
         };
     });
     res.json(extractedData);
