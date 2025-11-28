@@ -132,7 +132,7 @@ const Mcqs = () => {
 	const handleReportChange = (e) => {
 		const { name, value } = e.target;
 		// setReportData({ ...reportData, [name]: value, userId: user._id, question: mcqs[index]?.question });
-		setReportData({ ...reportData, [name]: value, question: mcqs[index]?.question });
+		setReportData({ ...reportData, [name]: value, question: mcqs[index]?.question, mcqId: mcqs[index]?._id });
 	}
 
 	// =============handle Report==========================

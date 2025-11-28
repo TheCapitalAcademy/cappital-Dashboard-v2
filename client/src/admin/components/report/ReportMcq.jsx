@@ -29,10 +29,12 @@ import {
     Delete as DeleteIcon,
     Visibility as VisibilityIcon,
     MarkEmailRead as MarkEmailReadIcon,
-    DeleteSweep as DeleteSweepIcon
+    DeleteSweep as DeleteSweepIcon,
+    Edit as EditIcon
 } from '@mui/icons-material';
 import { useSnackbar } from 'notistack';
 import axiosInstance from '../../../baseUrl.js';
+import EditMcqModal from '../shared/EditMcqModal';
 
 const columns = [
     { id: 'select', label: '', minWidth: 50, align: 'center' },
@@ -55,7 +57,13 @@ export default function ReportMcq() {
     const [reload, setReload] = useState(false);
     const [selectedReports, setSelectedReports] = useState([]);
     const [stats, setStats] = useState({ total: 0, unread: 0, read: 0 });
+    const [filterStatus, setFilterStatus] = useState('all'); // 'all', 'read', 'unread'
     const { enqueueSnackbar } = useSnackbar();
+
+    // Edit MCQ states
+    const [editModalOpen, setEditModalOpen] = useState(false);
+    const [editingMcqId, setEditingMcqId] = useState(null);
+    const [editingMcqData, setEditingMcqData] = useState(null);
 
     const handleChangePage = (event, newPage) => {
         setPage(newPage);
@@ -78,7 +86,7 @@ export default function ReportMcq() {
 
     const handleSelectAll = (event) => {
         if (event.target.checked) {
-            setSelectedReports(reports.map(report => report._id));
+            setSelectedReports(filteredReports.map(report => report._id));
         } else {
             setSelectedReports([]);
         }
@@ -203,6 +211,56 @@ export default function ReportMcq() {
         fetchData();
     }, [reload, enqueueSnackbar]);
 
+    const filteredReports = React.useMemo(() => {
+        return reports.filter(report => {
+            if (filterStatus === 'all') return true;
+            if (filterStatus === 'read') return report.isRead;
+            if (filterStatus === 'unread') return !report.isRead;
+            return true;
+        });
+    }, [reports, filterStatus]);
+
+    // Handle MCQ Edit
+    const handleEditMcq = async (report) => {
+        try {
+            // If report has mcqId, fetch directly by ID
+            if (report.mcqId) {
+                const response = await axiosInstance.get(`/mcq/${report.mcqId}`);
+                if (response.data) {
+                    setEditingMcqId(response.data._id);
+                    setEditingMcqData(response.data);
+                    setEditModalOpen(true);
+                    return;
+                }
+            }
+            
+            // Fallback to search by question text for older reports
+            let response = await axiosInstance.get(`/mcq/search?question=${encodeURIComponent(report.question)}`);
+            
+            // If no results, try with first 50 characters for partial match
+            if (!response.data.mcqs || response.data.mcqs.length === 0) {
+                const partialQuestion = report.question.substring(0, 50);
+                response = await axiosInstance.get(`/mcq/search?question=${encodeURIComponent(partialQuestion)}`);
+            }
+            
+            if (response.data.mcqs && response.data.mcqs.length > 0) {
+                const mcq = response.data.mcqs[0];
+                setEditingMcqId(mcq._id);
+                setEditingMcqData(mcq);
+                setEditModalOpen(true);
+            } else {
+                enqueueSnackbar('MCQ not found in database. It may have been deleted.', { variant: 'warning' });
+            }
+        } catch (error) {
+            enqueueSnackbar('Failed to fetch MCQ details', { variant: 'error' });
+            console.error('Error fetching MCQ:', error);
+        }
+    };
+
+    const handleEditSuccess = () => {
+        setReload(!reload);
+    };
+
     return (
         <Box sx={{ p: 3 }}>
             <Typography variant="h4" gutterBottom>
@@ -212,7 +270,16 @@ export default function ReportMcq() {
             {/* Statistics Cards */}
             <Grid container spacing={3} sx={{ mb: 3 }}>
                 <Grid item xs={12} md={4}>
-                    <Card>
+                    <Card 
+                        onClick={() => setFilterStatus('all')}
+                        sx={{ 
+                            cursor: 'pointer',
+                            border: filterStatus === 'all' ? 2 : 0,
+                            borderColor: 'primary.main',
+                            bgcolor: filterStatus === 'all' ? 'action.hover' : 'background.paper',
+                            transition: 'all 0.2s'
+                        }}
+                    >
                         <CardContent>
                             <Typography variant="h6" color="primary">Total Reports</Typography>
                             <Typography variant="h4">{stats.total}</Typography>
@@ -220,7 +287,16 @@ export default function ReportMcq() {
                     </Card>
                 </Grid>
                 <Grid item xs={12} md={4}>
-                    <Card>
+                    <Card
+                        onClick={() => setFilterStatus('unread')}
+                        sx={{ 
+                            cursor: 'pointer',
+                            border: filterStatus === 'unread' ? 2 : 0,
+                            borderColor: 'warning.main',
+                            bgcolor: filterStatus === 'unread' ? 'action.hover' : 'background.paper',
+                            transition: 'all 0.2s'
+                        }}
+                    >
                         <CardContent>
                             <Typography variant="h6" color="warning.main">Unread Reports</Typography>
                             <Typography variant="h4">{stats.unread}</Typography>
@@ -228,7 +304,16 @@ export default function ReportMcq() {
                     </Card>
                 </Grid>
                 <Grid item xs={12} md={4}>
-                    <Card>
+                    <Card
+                        onClick={() => setFilterStatus('read')}
+                        sx={{ 
+                            cursor: 'pointer',
+                            border: filterStatus === 'read' ? 2 : 0,
+                            borderColor: 'success.main',
+                            bgcolor: filterStatus === 'read' ? 'action.hover' : 'background.paper',
+                            transition: 'all 0.2s'
+                        }}
+                    >
                         <CardContent>
                             <Typography variant="h6" color="success.main">Read Reports</Typography>
                             <Typography variant="h4">{stats.read}</Typography>
@@ -237,32 +322,58 @@ export default function ReportMcq() {
                 </Grid>
             </Grid>
 
-            {/* Bulk Actions Toolbar */}
-            {selectedReports.length > 0 && (
-                <Toolbar sx={{ mb: 2, bgcolor: 'primary.light', borderRadius: 1 }}>
-                    <Typography variant="h6" sx={{ flex: '1 1 100%', color: 'primary.contrastText' }}>
-                        {selectedReports.length} selected
-                    </Typography>
-                    <Tooltip title="Mark as Read">
-                        <IconButton 
-                            onClick={handleMarkMultipleAsRead}
-                            disabled={loading}
-                            sx={{ color: 'primary.contrastText' }}
-                        >
-                            <MarkEmailReadIcon />
-                        </IconButton>
-                    </Tooltip>
-                    <Tooltip title="Delete Selected">
-                        <IconButton 
-                            onClick={handleDeleteMultiple}
-                            disabled={loading}
-                            sx={{ color: 'primary.contrastText' }}
-                        >
-                            <DeleteSweepIcon />
-                        </IconButton>
-                    </Tooltip>
-                </Toolbar>
-            )}
+            {/* Filter and Bulk Actions Toolbar */}
+            <Toolbar sx={{ mb: 2, bgcolor: 'primary.light', borderRadius: 1 }}>
+                <Typography variant="h6" sx={{ flex: '1 1 100%', color: 'primary.contrastText' }}>
+                    {selectedReports.length} selected
+                </Typography>
+                <Button
+                    variant={filterStatus === 'all' ? 'contained' : 'outlined'}
+                    color="primary"
+                    onClick={() => setFilterStatus('all')}
+                    sx={{ mr: 1, bgcolor: filterStatus === 'all' ? 'primary.main' : 'background.paper' }}
+                >
+                    All
+                </Button>
+                <Button
+                    variant={filterStatus === 'read' ? 'contained' : 'outlined'}
+                    color="success"
+                    onClick={() => setFilterStatus('read')}
+                    sx={{ mr: 1, bgcolor: filterStatus === 'read' ? 'success.main' : 'background.paper' }}
+                >
+                    Read
+                </Button>
+                <Button
+                    variant={filterStatus === 'unread' ? 'contained' : 'outlined'}
+                    color="warning"
+                    onClick={() => setFilterStatus('unread')}
+                    sx={{ mr: 1, bgcolor: filterStatus === 'unread' ? 'warning.main' : 'background.paper' }}
+                >
+                    Unread
+                </Button>
+                {selectedReports.length > 0 && (
+                    <>
+                        <Tooltip title="Mark as Read">
+                            <IconButton 
+                                onClick={handleMarkMultipleAsRead}
+                                disabled={loading}
+                                sx={{ color: 'primary.contrastText' }}
+                            >
+                                <MarkEmailReadIcon />
+                            </IconButton>
+                        </Tooltip>
+                        <Tooltip title="Delete Selected">
+                            <IconButton 
+                                onClick={handleDeleteMultiple}
+                                disabled={loading}
+                                sx={{ color: 'primary.contrastText' }}
+                            >
+                                <DeleteSweepIcon />
+                            </IconButton>
+                        </Tooltip>
+                    </>
+                )}
+            </Toolbar>
 
             <Paper sx={{ width: '100%', overflow: 'hidden' }}>
                 <TableContainer sx={{ maxHeight: 600 }}>
@@ -271,8 +382,8 @@ export default function ReportMcq() {
                             <TableRow>
                                 <TableCell padding="checkbox">
                                     <Checkbox
-                                        indeterminate={selectedReports.length > 0 && selectedReports.length < reports.length}
-                                        checked={reports.length > 0 && selectedReports.length === reports.length}
+                                        indeterminate={selectedReports.length > 0 && selectedReports.length < filteredReports.length}
+                                        checked={filteredReports.length > 0 && selectedReports.length === filteredReports.length}
                                         onChange={handleSelectAll}
                                     />
                                 </TableCell>
@@ -294,14 +405,14 @@ export default function ReportMcq() {
                                         <Typography>Loading reports...</Typography>
                                     </TableCell>
                                 </TableRow>
-                            ) : reports.length === 0 ? (
+                            ) : filteredReports.length === 0 ? (
                                 <TableRow>
                                     <TableCell colSpan={8} align="center" sx={{ py: 4 }}>
                                         <Typography color="text.secondary">No reports found</Typography>
                                     </TableCell>
                                 </TableRow>
                             ) : (
-                                reports
+                                filteredReports
                                     .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
                                     .map((report) => (
                                         <TableRow 
@@ -354,6 +465,16 @@ export default function ReportMcq() {
                                                         <VisibilityIcon />
                                                     </IconButton>
                                                 </Tooltip>
+                                                <Tooltip title="Edit MCQ">
+                                                    <IconButton 
+                                                        onClick={() => handleEditMcq(report)}
+                                                        disabled={loading}
+                                                        size="small"
+                                                        color="warning"
+                                                    >
+                                                        <EditIcon />
+                                                    </IconButton>
+                                                </Tooltip>
                                                 {!report.isRead && (
                                                     <Tooltip title="Mark as Read">
                                                         <IconButton 
@@ -386,7 +507,7 @@ export default function ReportMcq() {
                 <TablePagination
                     rowsPerPageOptions={[10, 25, 50, 100]}
                     component="div"
-                    count={reports.length}
+                    count={filteredReports.length}
                     rowsPerPage={rowsPerPage}
                     page={page}
                     onPageChange={handleChangePage}
@@ -478,6 +599,15 @@ export default function ReportMcq() {
                     </Button>
                 </DialogActions>
             </Dialog>
+
+            {/* Edit MCQ Modal */}
+            <EditMcqModal
+                open={editModalOpen}
+                onClose={() => setEditModalOpen(false)}
+                mcqId={editingMcqId}
+                mcqData={editingMcqData}
+                onSuccess={handleEditSuccess}
+            />
         </Box>
     );
 }

@@ -12,6 +12,11 @@ const reportSchema = new mongoose.Schema({
         required: true,
         trim: true,
     },
+    mcqId: {
+        type: mongoose.Schema.ObjectId,
+        ref: 'MCQ',
+        required: false
+    },
     msg: {
         type: String,
         required: true,

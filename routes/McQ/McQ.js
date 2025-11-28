@@ -577,6 +577,20 @@ router.get('/bookmarks', wrapAsync(async (req, res) => {
     }
 }));
 
+// Get MCQ by ID
+router.get('/:id', wrapAsync(async (req, res) => {
+    try {
+        const mcq = await MCQ.findById(req.params.id);
+        if (!mcq) {
+            return res.status(404).json({ error: 'MCQ not found' });
+        }
+        res.json(mcq);
+    } catch (error) {
+        console.error('Error fetching MCQ by ID:', error);
+        res.status(500).json({ error: 'Failed to fetch MCQ' });
+    }
+}));
+
 		
 
 module.exports = router;
