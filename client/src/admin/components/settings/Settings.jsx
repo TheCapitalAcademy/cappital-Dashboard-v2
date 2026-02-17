@@ -83,6 +83,7 @@ const Settings = () => {
         try {
             setLoadingRegularAdmin(true);
             const response = await axiosInstance.put('/admin/update-admin-password', {
+                adminId: superAdmin.id,
                 newPassword: regularAdminPassword,
                 superAdminPassword: regularAdminCurrentPassword  // Super admin password for authentication
             });
