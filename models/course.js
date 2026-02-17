@@ -15,6 +15,19 @@ const courseSchema = new Schema({
         type: Number,
         required: true
     },
+    cdiscount: {
+        type: Number,
+        default: 0
+    },
+    discountType: {
+        type: String,
+        enum: ['percentage', 'fixed'],
+        default: 'percentage'
+    },
+    discountActive: {
+        type: Boolean,
+        default: false
+    },
 });
 
 const Course = mongoose.model('Course', courseSchema);

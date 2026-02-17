@@ -5,7 +5,7 @@ const router = require('express').Router();
 
 
 router.post('/',wrapAsync(async (req, res) => {
-    const {courseName, courseDescription, coursePrice } = req.body;
+    const {courseName, courseDescription, coursePrice, discount, discountType, discountActive } = req.body;
     const cname=courseName;
     const cdesc=courseDescription;
     const cprice=coursePrice;
@@ -18,6 +18,9 @@ router.post('/',wrapAsync(async (req, res) => {
             // Update the existing course
             course.cdesc = cdesc;
             course.cprice = cprice;
+            course.cdiscount = discount !== undefined ? discount : (course.cdiscount || 0);
+            course.discountType = discountType || course.discountType || 'percentage';
+            course.discountActive = discountActive !== undefined ? discountActive : (course.discountActive || false);
             await course.save();
             res.status(200).json({ message: `${cname} Course Updated successfully` });
         } else {
@@ -26,6 +29,9 @@ router.post('/',wrapAsync(async (req, res) => {
                 cname,
                 cdesc,
                 cprice,
+                cdiscount: discount || 0,
+                discountType: discountType || 'percentage',
+                discountActive: discountActive || false,
             });
             await course.save();
             res.status(200).json({ message: `${cname} Created successfully`});
@@ -62,6 +68,46 @@ router.get('/:cname',wrapAsync(async (req, res) => {
     } catch (error) {
         console.error("Error retrieving course:", error);
         return res.status(500).json({ error: "Internal server error" }); // Return a 500 error for any other errors
+    }
+}));
+
+// Get course with calculated final price
+router.get('/:cname/pricing',wrapAsync(async (req, res) => {
+    const { cname } = req.params;
+    try {
+        const course = await Course.findOne({ cname });
+        if (course) {
+            let finalPrice = course.cprice;
+            let discountAmount = 0;
+            
+            if (course.discountActive && course.cdiscount > 0) {
+                if (course.discountType === 'percentage') {
+                    discountAmount = course.cprice * (course.cdiscount / 100);
+                    finalPrice = course.cprice - discountAmount;
+                } else {
+                    discountAmount = course.cdiscount;
+                    finalPrice = course.cprice - course.cdiscount;
+                }
+            }
+            
+            return res.status(200).json({
+                courseName: course.cname,
+                description: course.cdesc,
+                originalPrice: course.cprice,
+                discountActive: course.discountActive || false,
+                discount: course.cdiscount || 0,
+                discountType: course.discountType || 'percentage',
+                discountAmount: discountAmount,
+                finalPrice: finalPrice,
+                savings: discountAmount,
+                savingsPercentage: course.cprice > 0 ? ((discountAmount / course.cprice) * 100).toFixed(2) : 0
+            });
+        } else {
+            return res.status(404).json({ error: "Course not found" });
+        }
+    } catch (error) {
+        console.error("Error retrieving course pricing:", error);
+        return res.status(500).json({ error: "Internal server error" });
     }
 }));
 

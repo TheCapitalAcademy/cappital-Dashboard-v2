@@ -67,7 +67,7 @@ const Courses = () => {
         console.log(res)
         setCoursePrice(res.data.cprice)
         setCourseDescription(res.data.cdesc)
-        setDiscount(res.data.discount || 0)
+        setDiscount(res.data.cdiscount || 0)
         setDiscountType(res.data.discountType || 'percentage')
         setDiscountActive(res.data.discountActive || false)
     }
@@ -217,10 +217,11 @@ const Courses = () => {
                     </thead>
                     <tbody>
                         {cData.map((e, index) => {
+                            const discount = e.cdiscount || 0;
                             const finalPrice = e.discountActive
                                 ? e.discountType === 'percentage'
-                                    ? e.cprice - (e.cprice * e.discount / 100)
-                                    : e.cprice - e.discount
+                                    ? e.cprice - (e.cprice * discount / 100)
+                                    : e.cprice - discount
                                 : e.cprice;
                             
                             return (
@@ -231,7 +232,7 @@ const Courses = () => {
                                     <td>
                                         {e?.discountActive ? (
                                             <span className="badge bg-success">
-                                                {e?.discount}{e?.discountType === 'percentage' ? '%' : ' PKR'} OFF
+                                                {discount}{e?.discountType === 'percentage' ? '%' : ' PKR'} OFF
                                             </span>
                                         ) : (
                                             <span className="badge bg-secondary">No Discount</span>

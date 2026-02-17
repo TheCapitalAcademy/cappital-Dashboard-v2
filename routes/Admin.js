@@ -224,6 +224,43 @@ router.get('/all-admins', isSuperAdmin, wrapAsync(async (req, res) => {
     }
 }));
 
+// Update regular admin password - only super admin can do this
+router.put('/update-admin-password', isSuperAdmin, wrapAsync(async (req, res) => {
+    const { newPassword } = req.body;
+    
+    if (!newPassword) {
+        return res.status(400).json({ 
+            message: "New password is required" 
+        });
+    }
+    
+    if (newPassword.length < 6) {
+        return res.status(400).json({ 
+            message: "New password must be at least 6 characters long" 
+        });
+    }
+    
+    try {
+        // Find the regular admin (the one without username, or with role 'admin')
+        // The old system stored password as plain text in the password field
+        const regularAdmin = await Admin.findOneAndUpdate(
+            { role: { $ne: 'super-admin' } }, // Find admin that's NOT super-admin
+            { password: newPassword }, // Update password
+            { new: true, upsert: true } // Create if doesn't exist, return updated doc
+        );
+        
+        console.log(`[AUDIT] Super admin ${req.user.username} changed regular admin password at ${new Date().toISOString()}`);
+        
+        res.status(200).json({ 
+            message: "Regular admin password updated successfully" 
+        });
+        
+    } catch (error) {
+        console.error('Error updating admin password:', error);
+        res.status(500).json({ message: "Server error" });
+    }
+}));
+
 
 
 module.exports = router;

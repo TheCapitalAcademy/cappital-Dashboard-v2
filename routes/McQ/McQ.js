@@ -577,6 +577,159 @@ router.get('/bookmarks', wrapAsync(async (req, res) => {
     }
 }));
 
+
+// ================= Chapter Management - Preview =================
+// Returns count of MCQs that would be affected by a move/copy operation
+router.post('/chapter-management/preview', wrapAsync(async (req, res) => {
+    const { sourceCourse, targetCourse, subject, chapters } = req.body;
+
+    if (!sourceCourse || !targetCourse || !subject || !chapters || !chapters.length) {
+        return res.status(400).json({ message: 'sourceCourse, targetCourse, subject, and chapters are required' });
+    }
+
+    if (sourceCourse === targetCourse) {
+        return res.status(400).json({ message: 'Source and target course cannot be the same' });
+    }
+
+    try {
+        // Count MCQs per chapter in source course
+        const chapterCounts = await MCQ.aggregate([
+            {
+                $match: {
+                    course: sourceCourse,
+                    subject: subject,
+                    chapter: { $in: chapters }
+                }
+            },
+            {
+                $group: {
+                    _id: '$chapter',
+                    count: { $sum: 1 }
+                }
+            }
+        ]);
+
+        // Also check how many already exist in target course for these chapters
+        const existingInTarget = await MCQ.aggregate([
+            {
+                $match: {
+                    course: targetCourse,
+                    subject: subject,
+                    chapter: { $in: chapters }
+                }
+            },
+            {
+                $group: {
+                    _id: '$chapter',
+                    count: { $sum: 1 }
+                }
+            }
+        ]);
+
+        const totalToMove = chapterCounts.reduce((acc, c) => acc + c.count, 0);
+
+        res.json({
+            chapterCounts: chapterCounts.map(c => ({ chapter: c._id, count: c.count })),
+            existingInTarget: existingInTarget.map(c => ({ chapter: c._id, count: c.count })),
+            totalMcqs: totalToMove
+        });
+    } catch (error) {
+        console.error('Chapter management preview error:', error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+}));
+
+
+// ================= Chapter Management - Move/Copy =================
+// Moves or copies MCQs from one course to another for the specified chapters
+router.post('/chapter-management/execute', wrapAsync(async (req, res) => {
+    const { sourceCourse, targetCourse, subject, chapters, mode } = req.body;
+
+    if (!sourceCourse || !targetCourse || !subject || !chapters || !chapters.length || !mode) {
+        return res.status(400).json({ message: 'sourceCourse, targetCourse, subject, chapters, and mode are required' });
+    }
+
+    if (sourceCourse === targetCourse) {
+        return res.status(400).json({ message: 'Source and target course cannot be the same' });
+    }
+
+    if (!['move', 'copy'].includes(mode)) {
+        return res.status(400).json({ message: 'Mode must be either "move" or "copy"' });
+    }
+
+    try {
+        const filter = {
+            course: sourceCourse,
+            subject: subject,
+            chapter: { $in: chapters }
+        };
+
+        if (mode === 'move') {
+            // Move: Update the course field of matching MCQs
+            const result = await MCQ.updateMany(filter, { $set: { course: targetCourse } });
+            res.json({
+                message: `Successfully moved ${result.modifiedCount} MCQs from ${sourceCourse} to ${targetCourse}`,
+                modifiedCount: result.modifiedCount
+            });
+        } else {
+            // Copy: Duplicate matching MCQs with the new course value
+            const mcqsToCopy = await MCQ.find(filter).lean();
+
+            if (mcqsToCopy.length === 0) {
+                return res.status(404).json({ message: 'No MCQs found matching the criteria' });
+            }
+
+            // Remove _id and set new course
+            const newMcqs = mcqsToCopy.map(mcq => {
+                const { _id, ...rest } = mcq;
+                return { ...rest, course: targetCourse };
+            });
+
+            const result = await MCQ.insertMany(newMcqs);
+            res.json({
+                message: `Successfully copied ${result.length} MCQs from ${sourceCourse} to ${targetCourse}`,
+                copiedCount: result.length
+            });
+        }
+    } catch (error) {
+        console.error('Chapter management execute error:', error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+}));
+
+
+// ================= Chapter Management - Get chapters by course & subject =================
+// Returns distinct chapters for a given course and subject with counts
+router.get('/chapter-management/chapters', wrapAsync(async (req, res) => {
+    const { course, subject } = req.query;
+
+    if (!course || !subject) {
+        return res.status(400).json({ message: 'course and subject are required' });
+    }
+
+    try {
+        const chapterData = await MCQ.aggregate([
+            {
+                $match: { course, subject }
+            },
+            {
+                $group: {
+                    _id: '$chapter',
+                    count: { $sum: 1 }
+                }
+            },
+            {
+                $sort: { _id: 1 }
+            }
+        ]);
+
+        res.json(chapterData.map(c => ({ chapter: c._id, count: c.count })));
+    } catch (error) {
+        console.error('Get chapters error:', error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+}));
+
 		
 
 module.exports = router;
