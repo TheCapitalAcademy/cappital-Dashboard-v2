@@ -241,18 +241,23 @@ router.put('/update-admin-password', isSuperAdmin, wrapAsync(async (req, res) =>
     }
     
     try {
-        // Find the regular admin (the one without username, or with role 'admin')
-        // The old system stored password as plain text in the password field
-        const regularAdmin = await Admin.findOneAndUpdate(
-            { role: { $ne: 'super-admin' } }, // Find admin that's NOT super-admin
-            { password: newPassword }, // Update password
-            { new: true, upsert: true } // Create if doesn't exist, return updated doc
+        // Use the same search criteria as the old POST route
+        // Empty object finds the first admin (the regular admin without username)
+        const adminData = {
+            password: newPassword
+        };
+        
+        const updatedAdmin = await Admin.findOneAndUpdate(
+            {}, // Search criteria (empty object means it will look for any document)
+            adminData, // The data to update
+            { new: true, upsert: true } // Options: create a new doc if none is found, return the updated doc
         );
         
         console.log(`[AUDIT] Super admin ${req.user.username} changed regular admin password at ${new Date().toISOString()}`);
         
         res.status(200).json({ 
-            message: "Regular admin password updated successfully" 
+            message: "Regular admin password updated successfully",
+            admin: updatedAdmin
         });
         
     } catch (error) {
