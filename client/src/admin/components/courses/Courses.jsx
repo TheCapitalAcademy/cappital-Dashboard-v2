@@ -1,5 +1,5 @@
-import { Book, BookTwoTone,  Bookmark,  Info, NearMe, Payment, PriceChange } from '@mui/icons-material';
-import { Button, FormControl,  MenuItem, Select, TextField } from '@mui/material'
+import { Book, BookTwoTone,  Bookmark,  Info, NearMe, Payment, PriceChange, Discount, PercentOutlined, MoneyOff } from '@mui/icons-material';
+import { Button, FormControl,  MenuItem, Select, TextField, Switch, FormControlLabel, RadioGroup, Radio, FormLabel } from '@mui/material'
 import React, { useState } from 'react'
 import axios from 'axios'
 
@@ -16,6 +16,9 @@ const Courses = () => {
     const [courseName, setCourseName] = useState('');
     const [coursePrice, setCoursePrice] = useState('');
     const [courseDescription, setCourseDescription] = useState('');
+    const [discount, setDiscount] = useState(0);
+    const [discountType, setDiscountType] = useState('percentage');
+    const [discountActive, setDiscountActive] = useState(false);
     const [courseNameError, setCourseNameError] = useState('');
     const [coursePriceError, setCoursePriceError] = useState('');
     const [courseDescriptionError, setCourseDescriptionError] = useState('');
@@ -42,7 +45,14 @@ const Courses = () => {
         }
         // Submit the form
         try {
-            const res = await axiosInstance.post('/course', { courseName, coursePrice, courseDescription })
+            const res = await axiosInstance.post('/course', { 
+                courseName, 
+                coursePrice, 
+                courseDescription,
+                discount,
+                discountType,
+                discountActive
+            })
             enqueueSnackbar(res.data.message, { variant: "success", autoHideDuration: 1500 });
             setReload(!reload)
         } catch (error) {
@@ -57,6 +67,9 @@ const Courses = () => {
         console.log(res)
         setCoursePrice(res.data.cprice)
         setCourseDescription(res.data.cdesc)
+        setDiscount(res.data.discount || 0)
+        setDiscountType(res.data.discountType || 'percentage')
+        setDiscountActive(res.data.discountActive || false)
     }
 
     useEffect(() => {
@@ -89,6 +102,92 @@ const Courses = () => {
                         {coursePriceError && <span className='text-danger'>{coursePriceError}</span>}
                     </FormControl>
                 </div>
+                
+                {/* Discount Section */}
+                <div className="row col-md-12 my-3">
+                    <div className="col-12 mb-3">
+                        <FormControlLabel
+                            control={
+                                <Switch
+                                    checked={discountActive}
+                                    onChange={(e) => setDiscountActive(e.target.checked)}
+                                    color="primary"
+                                />
+                            }
+                            label={<strong className='text-primary fw-bold'><Discount style={{ color: "green", marginRight: "5px" }} />Enable Discount</strong>}
+                        />
+                    </div>
+                    
+                    {discountActive && (
+                        <>
+                            <div className="col-md-6 mb-2">
+                                <FormControl component="fieldset">
+                                    <FormLabel component="legend" className='text-primary fw-bold mb-2'>
+                                        Discount Type
+                                    </FormLabel>
+                                    <RadioGroup
+                                        row
+                                        value={discountType}
+                                        onChange={(e) => setDiscountType(e.target.value)}
+                                    >
+                                        <FormControlLabel
+                                            value="percentage"
+                                            control={<Radio />}
+                                            label={
+                                                <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                                    <PercentOutlined fontSize="small" /> Percentage
+                                                </span>
+                                            }
+                                        />
+                                        <FormControlLabel
+                                            value="fixed"
+                                            control={<Radio />}
+                                            label={
+                                                <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                                    <MoneyOff fontSize="small" /> Fixed Amount
+                                                </span>
+                                            }
+                                        />
+                                    </RadioGroup>
+                                </FormControl>
+                            </div>
+                            
+                            <div className="col-md-6 mb-2">
+                                <FormControl fullWidth>
+                                    <strong className='my-2 text-primary fw-bold'>
+                                        Discount Value {discountType === 'percentage' ? '(%)' : '(PKR)'}
+                                    </strong>
+                                    <TextField
+                                        type="number"
+                                        value={discount}
+                                        onChange={(e) => setDiscount(Number(e.target.value))}
+                                        inputProps={{ 
+                                            min: 0, 
+                                            max: discountType === 'percentage' ? 100 : undefined 
+                                        }}
+                                    />
+                                </FormControl>
+                            </div>
+                            
+                            {coursePrice && discount > 0 && (
+                                <div className="col-12">
+                                    <div className="alert alert-success" role="alert">
+                                        <strong>Final Price: </strong>
+                                        {discountType === 'percentage'
+                                            ? `PKR ${(coursePrice - (coursePrice * discount / 100)).toFixed(2)}`
+                                            : `PKR ${(coursePrice - discount).toFixed(2)}`
+                                        }
+                                        {' '}
+                                        <span className="text-muted">
+                                            (Original: PKR {coursePrice})
+                                        </span>
+                                    </div>
+                                </div>
+                            )}
+                        </>
+                    )}
+                </div>
+
                 <div className="mx-2">
                     <div className="row my-4">
                         <FormControl error={!!courseDescriptionError}>
@@ -110,19 +209,46 @@ const Courses = () => {
                         <tr >
                             <th scope="col">No</th>
                             <th scope="col">Course Name</th>
-                            <th scope="col">Course Price</th>
+                            <th scope="col">Original Price</th>
+                            <th scope="col">Discount</th>
+                            <th scope="col">Final Price</th>
                             <th scope="col">Course description</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {cData.map((e, index) => (
-                            <tr key={index}>
-                                <th scope="row">{index+1}</th>
-                                <td>{e?.cname}</td>
-                                <td>{e?.cprice}</td>
-                                <td><textarea style={{resize:"none"}} readOnly className='form-control resize-none'>{e?.cdesc}</textarea></td>
-                            </tr>
-                        ))}
+                        {cData.map((e, index) => {
+                            const finalPrice = e.discountActive
+                                ? e.discountType === 'percentage'
+                                    ? e.cprice - (e.cprice * e.discount / 100)
+                                    : e.cprice - e.discount
+                                : e.cprice;
+                            
+                            return (
+                                <tr key={index}>
+                                    <th scope="row">{index+1}</th>
+                                    <td>{e?.cname}</td>
+                                    <td>PKR {e?.cprice}</td>
+                                    <td>
+                                        {e?.discountActive ? (
+                                            <span className="badge bg-success">
+                                                {e?.discount}{e?.discountType === 'percentage' ? '%' : ' PKR'} OFF
+                                            </span>
+                                        ) : (
+                                            <span className="badge bg-secondary">No Discount</span>
+                                        )}
+                                    </td>
+                                    <td>
+                                        <strong>PKR {finalPrice.toFixed(2)}</strong>
+                                        {e?.discountActive && (
+                                            <span className="text-success ms-2">
+                                                ({((e.cprice - finalPrice) / e.cprice * 100).toFixed(0)}% off)
+                                            </span>
+                                        )}
+                                    </td>
+                                    <td><textarea style={{resize:"none"}} readOnly className='form-control resize-none'>{e?.cdesc}</textarea></td>
+                                </tr>
+                            );
+                        })}
                     </tbody>
                 </table>
             </div>

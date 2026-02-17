@@ -5,7 +5,7 @@ import { setSidebarToggle } from '../../../redux/sidebarToggle';
 import { 
     Add, AdminPanelSettings, Book, Report, Settings, ViewAgenda,
     Dashboard as DashboardIcon, Home, School, TrendingUp, People,
-    ExpandMore, ExpandLess
+    ExpandMore, ExpandLess, SwapHoriz
 } from '@mui/icons-material';
 import './sidebar.scss'
 
@@ -109,6 +109,10 @@ const Sidebar = () => {
                                 </Link>
                                 <Link to="/referral" className={`sub-item ${isActive('/referral') ? 'active' : ''}`}>
                                     <span>Referrals</span>
+                                </Link>
+                                <Link to="/chapter-management" className={`sub-item ${isActive('/chapter-management') ? 'active' : ''}`}>
+                                    <SwapHoriz style={{ fontSize: '18px', marginRight: '8px' }} />
+                                    <span>Move Chapters</span>
                                 </Link>
                             </div>
                         )}

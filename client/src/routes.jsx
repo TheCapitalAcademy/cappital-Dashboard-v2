@@ -33,6 +33,7 @@ const TestManagement = lazy(() => import('./admin/components/series/TestManageme
 const SeriesMcqManagement = lazy(() => import('./admin/components/series/SeriesMcqManagement.jsx'));
 const EnrollmentManagement = lazy(() => import('./admin/components/series/EnrollmentManagement.jsx'));
 const PaymentManagement = lazy(() => import('./admin/components/series/PaymentManagement.jsx'));
+const ChapterManagement = lazy(() => import('./admin/components/chapter-management/ChapterManagement.jsx'));
 
 // dashboard pages
 const DashboardLayout = lazy(() => import('./dashboard/layouts/index.jsx'));
@@ -288,6 +289,11 @@ const Routes = () => {
               errorElement: <CrashError />,
               element: <LazyLoader><PaymentManagement /></LazyLoader>
             },
+        {
+          path: "chapter-management",
+          errorElement: <CrashError />,
+          element: <LazyLoader><ChapterManagement /></LazyLoader>
+        },
       ],
     },
     // --------------Page not found route----------------
