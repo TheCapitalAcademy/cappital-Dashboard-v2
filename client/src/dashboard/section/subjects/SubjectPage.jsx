@@ -10,70 +10,19 @@ import mock from '../../../assets/subjects/6.png';
 import './subjectpage.scss';
 import { useParams } from 'react-router-dom';
 import { useSelector } from 'react-redux';
+import axiosInstance from '../../../baseUrl';
+
+// Static map: subject name (lowercase) → display info
+const SUBJECT_META = {
+  biology:   { displayName: 'BIOLOGY',          img: bio },
+  chemistry: { displayName: 'CHEMISTRY',         img: chem },
+  physics:   { displayName: 'PHYSICS',           img: phy },
+  english:   { displayName: 'ENGLISH',           img: eng },
+  logic:     { displayName: 'LOGICAL REASONING', img: logic },
+};
 
 const SubjectPage = () => {
   const path = useParams()?.subject;
-
-  const numsSubjectData = [
-    {
-      name: "BIOLOGY",
-      img: bio,
-      link: '/dashboard/subject/nums/biology'
-    },
-    {
-      name: "CHEMISTRY",
-      img: chem,
-      link: '/dashboard/subject/nums/chemistry'
-    },
-    {
-      name: "PHYSICS",
-      img: phy,
-      link: '/dashboard/subject/nums/physics'
-    },
-    {
-      name: "ENGLISH",
-      img: eng,
-      link: '/dashboard/subject/nums/english'
-    },
-    {
-      name: "MOCK TESTS",
-      img: mock,
-      link: '/dashboard/subject/nums/mock/test'
-    },
-  ];
-
-  const mdcatSubjectData = [
-    {
-      name: "BIOLOGY",
-      img: bio,
-      link: '/dashboard/subject/mdcat/biology'
-    },
-    {
-      name: "CHEMISTRY",
-      img: chem,
-      link: '/dashboard/subject/mdcat/chemistry'
-    },
-    {
-      name: "PHYSICS",
-      img: phy,
-      link: '/dashboard/subject/mdcat/physics'
-    },
-    {
-      name: "ENGLISH",
-      img: eng,
-      link: '/dashboard/subject/mdcat/english'
-    },
-    {
-      name: "LOGICAL REASONING",
-      img: logic,
-      link: '/dashboard/subject/mdcat/logic'
-    },
-    {
-      name: "MOCK TESTS",
-      img: mock,
-      link: '/dashboard/subject/mdcat/mock/test'
-    },
-  ];
 
   const [subjectData, setSubjectData] = useState([]);
   const [user, setUser] = useState(useSelector((state) => state.auth?.user?.user?.user));
@@ -82,17 +31,41 @@ const SubjectPage = () => {
   const isMdcatNums = user?.isMdcatNums || false;
   const isTrial = user?.isTrialActive || false;
   const trialStatus = isTrial && !isMdcat && !isNums && !isMdcatNums;
-  // const getTrialStatus = () => {
-  //     return isTrial && !isMdcat && !isNums && !isMdcatNums;
-  // };
 
   useEffect(() => {
-    if (path === "nums") {
-      setSubjectData(numsSubjectData);
-    } else if (path === "mdcat") {
-      setSubjectData(mdcatSubjectData);
-    }
-  }, []);
+    if (!path || !['nums', 'mdcat'].includes(path)) return;
+
+    axiosInstance.get(`/course-structure/${path}/subjects`)
+      .then(res => {
+        const subjects = res.data.map(name => {
+          const meta = SUBJECT_META[name.toLowerCase()] || { displayName: name.toUpperCase(), img: bio };
+          return {
+            name: meta.displayName,
+            img: meta.img,
+            link: `/dashboard/subject/${path}/${name.toLowerCase()}`,
+          };
+        });
+        // Mock tests are always appended (not part of course structure API)
+        subjects.push({
+          name: 'MOCK TESTS',
+          img: mock,
+          link: `/dashboard/subject/${path}/mock/test`,
+        });
+        setSubjectData(subjects);
+      })
+      .catch(() => {
+        // Fallback: hardcoded defaults if API fails
+        const fallback = path === 'nums'
+          ? ['biology', 'chemistry', 'physics', 'english']
+          : ['biology', 'chemistry', 'physics', 'english', 'logic'];
+        const subjects = fallback.map(name => {
+          const meta = SUBJECT_META[name];
+          return { name: meta.displayName, img: meta.img, link: `/dashboard/subject/${path}/${name}` };
+        });
+        subjects.push({ name: 'MOCK TESTS', img: mock, link: `/dashboard/subject/${path}/mock/test` });
+        setSubjectData(subjects);
+      });
+  }, [path]);
 
   return (
     <>

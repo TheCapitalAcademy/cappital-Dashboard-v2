@@ -7,6 +7,24 @@ import { useState } from 'react'
 import { useEffect } from 'react'
 import '../subjects/subjectpage.scss'
 import { useSelector } from 'react-redux';
+import axiosInstance from '../../../baseUrl';
+
+// Build a flat name→image map from all existing static chapter arrays.
+// Keys are lowercase trimmed so matching is reliable.
+const _allArrays = [
+    numsBioChapters, numsChemistryChapters, numsPhysicsChapters, numsEnglishChapters,
+    mdcatBioChapters, mdcatChemistryChapters, mdcatPhysicsChapters, mdcatEnglishChapters, mdcatLogicChapter,
+];
+const CHAPTER_IMG_MAP = {};
+_allArrays.forEach(arr => {
+    if (Array.isArray(arr)) {
+        arr.forEach(ch => {
+            if (ch?.name) CHAPTER_IMG_MAP[ch.name.toLowerCase().trim()] = ch.image;
+        });
+    }
+});
+// Fallback image for chapters not in the static map
+const DEFAULT_CHAPTER_IMG = numsBioChapters[0]?.image;
 
 const Chapters = () => {
     const subjectParam = useParams()?.subject.trim();
@@ -18,38 +36,33 @@ const Chapters = () => {
     const isMdcatNums = user?.isMdcatNums || false;
     const isTrial = user?.isTrialActive || false;
     const trialStatus=isTrial && !isMdcat && !isNums && !isMdcatNums;
-    // const getTrialStatus = () => {
-    //     return isTrial && !isMdcat && !isNums && !isMdcatNums;
-    // };
 
-    const [subject, setsubject] = useState(chapterParam || 'biology');
-    const [selectTopic, selectSelectedTopic] = useState(numsBioChapters);
+    const [selectTopic, selectSelectedTopic] = useState([]);
 
     useEffect(() => {
-        if (subjectParam === 'nums') {
-            if (chapterParam == 'biology') {
-                selectSelectedTopic(numsBioChapters)
-            } else if (chapterParam == 'chemistry') {
-                selectSelectedTopic(numsChemistryChapters);
-            } else if (chapterParam == 'physics') {
-                selectSelectedTopic(numsPhysicsChapters);
-            } else if (chapterParam == 'english') {
-                selectSelectedTopic(numsEnglishChapters);
-            }
-        } else if (subjectParam === 'mdcat') {
-            if (chapterParam == 'biology') {
-                selectSelectedTopic(mdcatBioChapters)
-            } else if (chapterParam == 'chemistry') {
-                selectSelectedTopic(mdcatChemistryChapters);
-            } else if (chapterParam == 'physics') {
-                selectSelectedTopic(mdcatPhysicsChapters);
-            } else if (chapterParam == 'english') {
-                selectSelectedTopic(mdcatEnglishChapters);
-            } else if (chapterParam == 'logic') {
-                selectSelectedTopic(mdcatLogicChapter);
-            }
-        }
-    }, [subject])
+        if (!subjectParam || !chapterParam) return;
+        if (!['nums', 'mdcat'].includes(subjectParam)) return;
+
+        axiosInstance
+            .get(`/course-structure/${subjectParam}/subjects/${encodeURIComponent(chapterParam)}/chapters`)
+            .then(res => {
+                const chapters = res.data.map((name, idx) => ({
+                    id: idx + 1,
+                    name: name.toUpperCase(),
+                    image: CHAPTER_IMG_MAP[name.toLowerCase().trim()] || DEFAULT_CHAPTER_IMG,
+                }));
+                selectSelectedTopic(chapters);
+            })
+            .catch(() => {
+                // Fallback to static data on API failure
+                const fallback = {
+                    nums: { biology: numsBioChapters, chemistry: numsChemistryChapters, physics: numsPhysicsChapters, english: numsEnglishChapters },
+                    mdcat: { biology: mdcatBioChapters, chemistry: mdcatChemistryChapters, physics: mdcatPhysicsChapters, english: mdcatEnglishChapters, logic: mdcatLogicChapter },
+                };
+                const arr = fallback[subjectParam]?.[chapterParam] || [];
+                selectSelectedTopic(arr);
+            });
+    }, [subjectParam, chapterParam])
 
 
     return (

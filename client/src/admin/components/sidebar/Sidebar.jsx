@@ -114,6 +114,9 @@ const Sidebar = () => {
                                     <SwapHoriz style={{ fontSize: '18px', marginRight: '8px' }} />
                                     <span>Move Chapters</span>
                                 </Link>
+                                <Link to="/manage-course-structure" className={`sub-item ${isActive('/manage-course-structure') ? 'active' : ''}`}>
+                                    <span>Course Structure</span>
+                                </Link>
                             </div>
                         )}
                     </div>

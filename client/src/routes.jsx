@@ -34,6 +34,7 @@ const SeriesMcqManagement = lazy(() => import('./admin/components/series/SeriesM
 const EnrollmentManagement = lazy(() => import('./admin/components/series/EnrollmentManagement.jsx'));
 const PaymentManagement = lazy(() => import('./admin/components/series/PaymentManagement.jsx'));
 const ChapterManagement = lazy(() => import('./admin/components/chapter-management/ChapterManagement.jsx'));
+const CourseStructure = lazy(() => import('./admin/components/course-structure/CourseStructure.jsx'));
 
 // dashboard pages
 const DashboardLayout = lazy(() => import('./dashboard/layouts/index.jsx'));
@@ -293,6 +294,11 @@ const Routes = () => {
           path: "chapter-management",
           errorElement: <CrashError />,
           element: <LazyLoader><ChapterManagement /></LazyLoader>
+        },
+        {
+          path: "manage-course-structure",
+          errorElement: <CrashError />,
+          element: <LazyLoader><CourseStructure /></LazyLoader>
         },
       ],
     },

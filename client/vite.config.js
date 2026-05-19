@@ -82,6 +82,10 @@ export default defineConfig({
         target: 'http://localhost:5100',
         changeOrigin: true,
       },
+      '/course-structure': {
+        target: 'http://localhost:5100',
+        changeOrigin: true,
+      },
       '/uploads': {
         target: 'http://localhost:5100',
         changeOrigin: true,

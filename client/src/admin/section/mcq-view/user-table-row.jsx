@@ -14,7 +14,6 @@ import { Box, Button, Modal, Typography } from '@mui/material';
 import { useEffect } from 'react';
 import { Col, Container, Form, Row } from 'react-bootstrap';
 import { bioTopicsNames, chemistryTopicsNames, physicsTopicsNames } from '../../../utils/topics';
-import { bioChapterNames, englishChapterNames, chemistryChapterNames, physicsChapterNames, logicChapterNames } from '../../../utils/chaptername';
 import Lightbox from 'yet-another-react-lightbox';
 import 'yet-another-react-lightbox/styles.css';
 
@@ -97,8 +96,9 @@ export default function UserTableRow({
 
   // =============================edit modele============
   const [errors, setErrors] = useState({});
-  const [chap, setChap] = useState(englishChapterNames);
+  const [chap, setChap] = useState([]);
   const [subj, setSubj] = useState('english');
+  const [editCourse, setEditCourse] = useState(course || 'nums');
   const [topic, setTopic] = useState([]);
   const [selectChapter, setSelectChapter] = useState('');
   const [image, setImage] = useState(null);
@@ -117,7 +117,7 @@ export default function UserTableRow({
     subj: 'english',
     chap: '',
     topic: '',
-    course: 'nums',
+    course: course || 'nums',
     info: '',
     explain: '',
     imageUrl: '',
@@ -217,23 +217,12 @@ export default function UserTableRow({
   };
 
   useEffect(() => {
-    if (subj === 'biology') {
-      setChap(bioChapterNames);
-      setTopic([]);
-    } else if (subj === 'chemistry') {
-      setChap(chemistryChapterNames);
-      setTopic([]);
-    } else if (subj === 'physics') {
-      setChap(physicsChapterNames);
-      setTopic([]);
-    } else if (subj === 'logic') {
-      setChap(logicChapterNames);
-      setTopic([]);
-    } else if (subj === 'english') {
-      setChap(englishChapterNames);
-      setTopic([]);
-    }
-  }, [subj]);
+    if (!subj) return;
+    axiosInstance
+      .get(`/course-structure/${editCourse}/subjects/${encodeURIComponent(subj)}/chapters`)
+      .then(res => { setChap(res.data); setTopic([]); })
+      .catch(() => { setChap([]); setTopic([]); });
+  }, [subj, editCourse]);
 
   useEffect(() => {
     if (subj === 'biology') {
@@ -276,6 +265,12 @@ export default function UserTableRow({
     setTopic([]);
     setFormData({ ...formData, [name]: value, topic: '', chap: '' });
     setSubj(e.target.value);
+  }
+
+  const handleCourseChange = (e) => {
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
+    setEditCourse(value);
   }
 
 
@@ -513,7 +508,7 @@ export default function UserTableRow({
                 <Col md={2}>
                   <Form.Group controlId="course">
                     <Form.Label>Course</Form.Label>
-                    <Form.Control as="select" name="course" value={formData.course} onChange={handleChange}>
+                    <Form.Control as="select" name="course" value={formData.course} onChange={handleCourseChange}>
                       <option value="nums">Nums</option>
                       <option value="mdcat">Mdcat</option>
                     </Form.Control>

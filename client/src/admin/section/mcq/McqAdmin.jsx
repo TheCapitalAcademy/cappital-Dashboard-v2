@@ -1,19 +1,18 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { Form, Button, Container, Row, Col, Spinner } from 'react-bootstrap';
-import { bioChapterNames, englishChapterNames, chemistryChapterNames, physicsChapterNames, logicChapterNames } from '../../../utils/chaptername';
+import { bioTopicsNames, chemistryTopicsNames, physicsTopicsNames } from '../../../utils/topics';
 import { Avatar, IconButton } from '@mui/material';
-import axios from 'axios';
 import { closeSnackbar, useSnackbar } from 'notistack';
 import { Close } from '@mui/icons-material';
-import { bioTopicsNames, chemistryTopicsNames, physicsTopicsNames } from '../../../utils/topics';
 import axiosInstance from '../../../baseUrl';
 import Lightbox from 'yet-another-react-lightbox';
 import 'yet-another-react-lightbox/styles.css';
 
 const MCQForm = () => {
     const [errors, setErrors] = useState({});
-    const [chapter, setChapter] = useState(englishChapterNames);
+    const [chapter, setChapter] = useState([]);
     const [subject, setSubject] = useState('english');
+    const [course, setCourse] = useState('nums');
     const [topic, setTopic] = useState([]);
     const [selectChapter, setSelectChapter] = useState('');
     const [image, setImage] = useState(null);
@@ -170,23 +169,12 @@ const MCQForm = () => {
     };
 
     useEffect(() => {
-        if (subject === 'biology') {
-            setChapter(bioChapterNames);
-            setTopic([]);
-        } else if (subject === 'chemistry') {
-            setChapter(chemistryChapterNames);
-            setTopic([]);
-        } else if (subject === 'physics') {
-            setChapter(physicsChapterNames);
-            setTopic([]);
-        } else if (subject === 'logic') {
-            setChapter(logicChapterNames);
-            setTopic([]);
-        } else if (subject === 'english') {
-            setChapter(englishChapterNames);
-            setTopic([]);
-        }
-    }, [subject]);
+        if (!subject) return;
+        axiosInstance
+            .get(`/course-structure/${course}/subjects/${encodeURIComponent(subject)}/chapters`)
+            .then(res => { setChapter(res.data); setTopic([]); })
+            .catch(() => { setChapter([]); setTopic([]); });
+    }, [subject, course]);
 
     useEffect(() => {
         if (subject === 'biology') {
@@ -223,6 +211,12 @@ const MCQForm = () => {
         setTopic([]);
         setFormData({ ...formData, [name]: value, topic: '', chapter: '' });
         setSubject(e.target.value);
+    }
+
+    const handleCourseChange = (e) => {
+        const { name, value } = e.target;
+        setFormData({ ...formData, [name]: value });
+        setCourse(value);
     }
 
     const openLightbox = (images, startIndex = 0) => {
@@ -309,7 +303,7 @@ const MCQForm = () => {
                     <Col md={2}>
                         <Form.Group controlId="course">
                             <Form.Label>Course</Form.Label>
-                            <Form.Control as="select" name="course" value={formData.course} onChange={handleChange}>
+                            <Form.Control as="select" name="course" value={formData.course} onChange={handleCourseChange}>
                                 <option value="nums">Nums</option>
                                 <option value="mdcat">Mdcat</option>
                             </Form.Control>
