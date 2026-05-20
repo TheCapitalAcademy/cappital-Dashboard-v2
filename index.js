@@ -119,12 +119,15 @@ app.use('/verify-session',checkTrialStatus, wrapAsync(async (req, res, next) => 
 }));
 
 app.get('/userinfo',checkTrialStatus, wrapAsync(async (req, res, next) => {
+    if (!req.user) {
+        return res.status(401).json({ user: null });
+    }
     try {
         const userId = req.user._id;
         const user = await userModel.findById(userId);
         res.json({ user });
     } catch (error) {
-        res.status(404).send('user expire');
+        res.status(500).send('Internal server error');
     }
 }));
 
