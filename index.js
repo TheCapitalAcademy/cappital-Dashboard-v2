@@ -32,6 +32,7 @@ const testRouter = require('./routes/series/tests.js');
 const enrollmentRouter = require('./routes/series/enrollments.js');
 const paymentRouter = require('./routes/series/payments.js');
 const seriesMcqRouter = require('./routes/series/seriesMcqs.js');
+const courseStructureRouter = require('./routes/courseStructure.js');
 
 
 //dotenv variables
@@ -146,6 +147,7 @@ app.use('/tests', testRouter);
 app.use('/enrollments', enrollmentRouter);
 app.use('/payments', paymentRouter);
 app.use('/series-mcqs', seriesMcqRouter);
+app.use('/course-structure', courseStructureRouter);
 
 
 //React app configurations
